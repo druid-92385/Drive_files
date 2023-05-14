@@ -1,0 +1,145 @@
+.Dd 09/23/22
+.Dt imp 8
+.Os Linux
+.Sh NAME
+.Nm imp
+.Nd A helper for Windows Subsystem for Linux's native systemd support.
+.Sh SYNOPSIS
+.Nm
+.Op -h
+.Op -V
+.Op -v
+.Op -a
+.Ar user
+.Op -i
+.Op -s
+.Op -l
+.Op -u
+.Op -c
+.Ar command...
+.Sh DESCRIPTION
+.Nm
+provides a means of running inside a
+.Xr systemd 1
+user session, with full support for user
+.Xr systemd 1
+, session dbus, and Windows interoperability.
+.Pp
+.Bl -tag -width "-c ..., --command ..."
+.It Fl h, -help
+Prints a short help text and exits.
+.It Fl V, -version
+Prints the installed imp version and exits.
+.It Fl v, -verbose
+Causes any other command to print the details of the operations it is
+performing as it goes along. Useful mostly for debugging.
+.It Fl a, -as-user
+Permits a user to be specified (by name) to execute as when using the -c/--command
+or -s/--shell commands.
+.It Fl i, -initialize
+Sets up the needful for Windows interoperability support, and starts the
+lifetime-running process to preserve the current WSL instance. It should
+be run before any of the other
+.Nm
+commands.
+.It Fl s, -shell
+Runs your login shell within a systemd login session. It is intended as
+the standard way to start a shell within a distribution with
+.Nm
+installed.
+.Pp
+This follows login semantics, and as such does not preserve the current
+working directory.
+.It Fl l, -login
+Opens a login prompt. This permits you to log in to the WSL distribution
+as any user. The login prompt will return when you log out; to terminate
+the session, press ^] three times within one second.
+.Pp
+This follows login semantics, and as such does not preserve the current
+working directory.
+.It Fl c, -command
+Runs the specified command inside a systemd login session. It is
+intended as the standard way to run arbitrary commands within a
+distribution with
+.Nm
+installed.
+.Pp
+Unlike the other options, this preserves the current working directory.
+.It Fl u, -shutdown
+Shuts down
+.Xr systemd 1
+cleanly and exits the WSL instance. This uses the
+.Ar systemctl poweroff
+command to simulate a normal Linux system shutting down. It is suggested that
+this be used before shutting down the Windows machine or force-terminating WSL
+to ensure a clean shutdown of
+.Xr systemd 1
+services.
+.Pp
+Shutting down the WSL instance in this way causes it to exit
+.Ar completely.
+You should wait for the instance to show as stopped before attempting to restart it
+or execute further commands inside it.
+.El
+.Sh EXIT STATUS
+.Nm
+maintains a policy of returning zero on success, and non-zero when an error
+occurs.
+.Sh NOTES
+.Nm
+can only be used within a WSL 2 distribution, since
+.Xr systemd 1
+can only be run within a WSL 2 distribution. WSL 1 does not implement the
+system calls required to support it.
+.Pp
+.Nm
+serves no purpose on Linux running outside of the WSL environment, or
+within other containers. Its behavior if run in such environments is
+undefined.
+.Sh SEE ALSO
+.Xr systemctl 1 ,
+.Xr systemd 1 ,
+.Xr bootup 7 ,
+.Xr systemd-machined 8 ,
+.Sh BUGS
+1. Using
+.Nm
+to create a session is required for the user login session (and its concomitants, such as a user 
+.Xr systemd 1
+instance and a session dbus) to be created properly. Simply starting a process with
+.Ar wsl
+(or using a Linux GUI app shortcut) does not do this, although the problem is less serious than with
+.Ar genie
+, since the process will still be started with
+.Xr systemd 1
+as pid 1.
+.Pp
+2. While the Windows Terminal environment variables, WT_SESSION and WT_PROFILE_ID, will be passed
+through to shell and command prompt invocations of
+.Nm
+, they will not be passed through to login sessions created with
+.Ar imp -l
+, due to a limitation in
+.Xr machinectl 1
+.
+.Pp
+3.
+.Nm
+requires the Python package 
+.Ar psutil
+, which due to technical limitations of 
+.Ar zipapp
+can't be wrapped into the 
+.Nm
+executable. As such,
+.Nm
+depends on this package for the system Python. If you are inside another Python environment,
+.Nm
+may fail unless you install the 
+.Ar psutil
+package into this environment also.
+.Pp
+If you feel you have found a bug in
+.Nm
+please submit a bug report at
+.Ar http://github.com/arkane-systems/bottle-imp/issues
